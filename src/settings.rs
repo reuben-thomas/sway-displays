@@ -143,8 +143,7 @@ impl Config {
                 commands.push(output_properties.to_sway_workspace_command(&output.name));
             }
         }
-        let commands = commands.join(";\n");
-        println!("Running command: {}", commands);
+        let commands = commands.join(";");
         connection
             .run_command(&commands)
             .expect("Failed to run command");
