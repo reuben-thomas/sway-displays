@@ -1,0 +1,11 @@
+[package]
+name = "sway-displays"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+clap = "4.5.7"
+dirs = "5.0.1"
+serde = "1.0.203"
+serde_yaml = "0.9.34"
+swayipc = "3.0.2"
