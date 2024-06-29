@@ -1,5 +1,5 @@
 use dirs::config_dir;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{collections::HashMap, fmt::Display, path::PathBuf};
 use swayipc::{Connection, Output as SwayOutput, Workspace as SwayWorkspace};
 
@@ -97,7 +97,7 @@ impl From<&SwayOutput> for OutputProperties {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
+#[derive(Clone, Serialize, Deserialize, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct OutputIdentifier(String);
 
 impl From<&SwayOutput> for OutputIdentifier {
@@ -153,17 +153,29 @@ impl Config {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Default, Hash, PartialEq, Eq)]
+#[derive(Clone, Serialize, Default, Hash, PartialEq, Eq)]
 pub struct DefaultConfigIdentifier(Vec<OutputIdentifier>);
+
+impl<'de> Deserialize<'de> for DefaultConfigIdentifier {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let identifiers: Vec<OutputIdentifier> = Vec::deserialize(deserializer)?;
+        let mut sorted_identifiers = identifiers;
+        sorted_identifiers.sort();
+        Ok(DefaultConfigIdentifier(sorted_identifiers))
+    }
+}
 
 impl From<&Vec<SwayOutput>> for DefaultConfigIdentifier {
     fn from(outputs: &Vec<SwayOutput>) -> Self {
-        DefaultConfigIdentifier(
-            outputs
-                .iter()
-                .map(|output| OutputIdentifier::from(output))
-                .collect(),
-        )
+        let mut identifiers: Vec<OutputIdentifier> = outputs
+            .iter()
+            .map(|output| OutputIdentifier::from(output))
+            .collect();
+        identifiers.sort();
+        DefaultConfigIdentifier(identifiers)
     }
 }
 
