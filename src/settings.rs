@@ -1,28 +1,28 @@
 use dirs::config_dir;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, fmt::Display, path::PathBuf};
 use swayipc::{Connection, Output as SwayOutput, Workspace as SwayWorkspace};
 
-#[derive(Clone, Serialize, Deserialize, Debug, Default)]
-pub struct OutputProperties {
+#[derive(Clone, Serialize, Deserialize, Default)]
+struct OutputProperties {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub active: Option<bool>,
+    active: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub resolution: Option<(i32, i32)>,
+    resolution: Option<(i32, i32)>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub position: Option<(i32, i32)>,
+    position: Option<(i32, i32)>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub rotation: Option<String>,
+    rotation: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scale: Option<f64>,
+    scale: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub refresh_rate: Option<i32>,
+    refresh_rate: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub workspaces: Option<Vec<String>>,
+    workspaces: Option<Vec<String>>,
 }
 
 impl OutputProperties {
-    pub fn to_sway_output_command(&self, connection_name: &String) -> String {
+    fn to_sway_output_command(&self, connection_name: &String) -> String {
         let mut command = "output ".to_string() + connection_name;
         if let Some(active) = self.active {
             if active {
@@ -53,11 +53,14 @@ impl OutputProperties {
         return command;
     }
 
-    pub fn to_sway_workspace_command(&self, connection_name: &String) -> String {
+    fn to_sway_workspace_command(&self, connection_name: &String) -> String {
         let mut commands = Vec::<String>::new();
         if let Some(workspaces) = &self.workspaces {
             for workspace in workspaces {
-                commands.push(format!("workspace {} output {}", workspace, connection_name));
+                commands.push(format!(
+                    "workspace {} output {}",
+                    workspace, connection_name
+                ));
             }
         }
         return commands.join(";");
@@ -68,12 +71,12 @@ impl From<&SwayOutput> for OutputProperties {
     fn from(output: &SwayOutput) -> Self {
         OutputProperties {
             active: Some(output.active),
-            resolution: if output.rect.width > 0 && output.rect.height > 0 {
+            resolution: if output.rect.width > 0 || output.rect.height > 0 {
                 Some((output.rect.width, output.rect.height))
             } else {
                 None
             },
-            position: if output.rect.x > 0 && output.rect.y > 0 {
+            position: if output.rect.x > 0 || output.rect.y > 0 {
                 Some((output.rect.x, output.rect.y))
             } else {
                 None
@@ -94,8 +97,8 @@ impl From<&SwayOutput> for OutputProperties {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, Default, PartialEq, Eq, Hash)]
-pub struct OutputIdentifier(String);
+#[derive(Clone, Serialize, Deserialize, Default, PartialEq, Eq, Hash)]
+struct OutputIdentifier(String);
 
 impl From<&SwayOutput> for OutputIdentifier {
     fn from(output: &SwayOutput) -> Self {
@@ -106,7 +109,7 @@ impl From<&SwayOutput> for OutputIdentifier {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, Default)]
+#[derive(Clone, Serialize, Deserialize, Default)]
 pub struct Config(HashMap<OutputIdentifier, OutputProperties>);
 
 impl Config {
@@ -150,7 +153,7 @@ impl Config {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, Default, Hash, PartialEq, Eq)]
+#[derive(Clone, Serialize, Deserialize, Default, Hash, PartialEq, Eq)]
 pub struct DefaultConfigIdentifier(Vec<OutputIdentifier>);
 
 impl From<&Vec<SwayOutput>> for DefaultConfigIdentifier {
@@ -164,10 +167,20 @@ impl From<&Vec<SwayOutput>> for DefaultConfigIdentifier {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, Default, Hash, PartialEq, Eq)]
+impl Display for DefaultConfigIdentifier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut output_names: Vec<String> = Vec::new();
+        for output in &self.0 {
+            output_names.push(output.0.clone());
+        }
+        write!(f, "[{}]", output_names.join(", "))
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Default, Hash, PartialEq, Eq)]
 pub struct CustomConfigIdentfier(pub String);
 
-#[derive(Clone, Serialize, Deserialize, Debug, Default)]
+#[derive(Clone, Serialize, Deserialize, Default)]
 pub struct Settings {
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub custom_configurations: HashMap<CustomConfigIdentfier, Config>,

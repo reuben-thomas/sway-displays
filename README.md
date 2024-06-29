@@ -1,17 +1,22 @@
 # sway-displays
+### Installation
+``` Bash
+cargo install --path .
+```
 ### Usage
 
 ``` 
 Usage: sway-displays [OPTIONS] <COMMAND>
 
 Commands:
-  list         List all saved configurations
-  save         Save current as a default configuration
-  save-custom  Save current layout as a custom configuration
-  set          Automatically set a default configuration based on connected displays
-  set-custom   Set a custom configuration by name
-  run          Run continuously, automatically set configurations based on connected displays
-  help         Print this message or the help of the given subcommand(s)
+  list            List all saved configurations
+  show-connected  Show names of connected displays
+  save            Save current as a default configuration
+  save-custom     Save current layout as a custom configuration
+  set             Automatically set a default configuration based on connected displays
+  set-custom      Set a custom configuration by name
+  run             Run in continuous mode and automatically set apply default configurations based on connected displays
+  help            Print this message or the help of the given subcommand(s)
 
 Options:
   -c, --config <CONFIG_FILE_PATH>  Use a custom config file

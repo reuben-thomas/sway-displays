@@ -1,15 +1,16 @@
-use std::path::PathBuf;
 use clap::{arg, Command};
+use std::path::PathBuf;
 
 #[derive(Debug, Default, Clone)]
 pub struct UserCommand {
     pub action: Action,
-pub config_file_path: Option<PathBuf>,
+    pub config_file_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Default, Clone)]
 pub enum Action {
     List,
+    ShowConnected,
     Save,
     SaveCustom(String),
     Set,
@@ -19,7 +20,7 @@ pub enum Action {
     Invalid,
 }
 
-pub fn cli() -> UserCommand {
+pub fn user_command() -> UserCommand {
     let arg_matches = Command::new("sway-displays")
         .about("A tool to manage display configurations in Sway.\n\n\
             Default configurations are saved and can then be loaded based on the connected displays.\n\
@@ -28,6 +29,7 @@ pub fn cli() -> UserCommand {
         .arg_required_else_help(true)
         .allow_external_subcommands(true)
         .subcommand(Command::new("list").about("List all saved configurations"))
+        .subcommand(Command::new("show-connected").about("Show names of connected displays"))
         .subcommand(
             Command::new("save").about("Save current as a default configuration"),
         )
@@ -64,41 +66,44 @@ pub fn cli() -> UserCommand {
         .get_one::<String>("config")
         .map(|s| PathBuf::from(s.to_string()));
 
-    match arg_matches.subcommand() {
-        Some(("list", _)) => UserCommand {
-            action: Action::List,
-            config_file_path,
-        },
-        Some(("save", _)) => UserCommand {
-            action: Action::Save,
-            config_file_path,
-        },
-        Some(("save-custom", sub_matches)) => UserCommand {
-            action: Action::SaveCustom(
+    UserCommand {
+        action: match arg_matches.subcommand() {
+            Some(("list", _)) => Action::List,
+            Some(("show-connected", _)) => Action::ShowConnected,
+            Some(("save", _)) => Action::Save,
+            Some(("save-custom", sub_matches)) => Action::SaveCustom(
                 sub_matches
                     .get_one::<String>("custom_config_name")
                     .expect("Missing custom config name")
                     .to_string(),
             ),
-            config_file_path,
-        },
-        Some(("set", _)) => UserCommand {
-            action: Action::Set,
-            config_file_path,
-        },
-        Some(("set-custom", sub_matches)) => UserCommand {
-            action: Action::SaveCustom(
+            Some(("set", _)) => Action::Set,
+            Some(("set-custom", sub_matches)) => Action::SetCustom(
                 sub_matches
                     .get_one::<String>("custom_config_name")
                     .expect("Missing custom config name")
                     .to_string(),
             ),
-            config_file_path,
+            Some(("run", _)) => Action::RunContinuous,
+            _ => Action::Invalid,
         },
-        Some(("run", _)) => UserCommand {
-            action: Action::RunContinuous,
-            config_file_path,
-        },
-        _ => UserCommand::default(),
+        config_file_path,
+    }
+}
+
+pub fn confirm_overwrite(config_name: &String) -> bool {
+    let confirmation = format!(
+        "There already exists a configuration {}\nOverwrite? (y/n)",
+        config_name
+    );
+    println!("{}", confirmation);
+
+    let mut input = String::new();
+    match std::io::stdin().read_line(&mut input) {
+        Ok(_) => {
+            let input = input.trim().to_lowercase();
+            input == "y" || input == "yes"
+        }
+        Err(_) => false,
     }
 }
