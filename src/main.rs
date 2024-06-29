@@ -66,10 +66,7 @@ fn main() {
                 Config::from_sway_outputs_workspaces(&outputs, &workspaces),
             );
             settings.save_to_file(&config_file_path);
-            println!(
-                "Saved custom configuration named: {}",
-                custom_config_name
-            )
+            println!("Saved custom configuration named: {}", custom_config_name)
         }
         Action::Set => {
             let current_config_identifier = DefaultConfigIdentifier::from(&outputs);
