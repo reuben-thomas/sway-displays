@@ -52,8 +52,6 @@ pub fn user_command() -> UserCommand {
         .subcommand(
             Command::new("run")
                 .about("Run in continuous mode and automatically set apply default configurations based on connected displays")
-                .arg(arg!(custom_config_name: [CUSTOM_CONFIG_NAME]))
-                .arg_required_else_help(true),
         )
         .arg(
             arg!(-c --config <CONFIG_FILE_PATH> "Use a custom config file")

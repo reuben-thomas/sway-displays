@@ -34,39 +34,43 @@ fn main() {
         }
         Action::Save => {
             let current_config_identifier = DefaultConfigIdentifier::from(&outputs);
-            settings
+            let current_config = Config::from_sway_outputs_workspaces(&outputs, &workspaces);
+            if settings
                 .default_configurations
                 .contains_key(&current_config_identifier)
-                .then(|| {
-                    if !cli::confirm_overwrite(&current_config_identifier.to_string()) {
-                        return;
-                    }
-                });
-            settings.default_configurations.insert(
-                DefaultConfigIdentifier::from(&outputs),
-                Config::from_sway_outputs_workspaces(&outputs, &workspaces),
-            );
+            {
+                if !cli::confirm_overwrite(&current_config_identifier.to_string()) {
+                    return;
+                }
+            }
+            settings
+                .default_configurations
+                .insert(current_config_identifier.clone(), current_config);
             settings.save_to_file(&config_file_path);
             println!(
                 "Saved default configuration for outputs:\n{}",
                 current_config_identifier
-            )
+            );
         }
         Action::SaveCustom(custom_config_name) => {
+            let current_config_identifier = CustomConfigIdentfier(custom_config_name);
+            let current_config = Config::from_sway_outputs_workspaces(&outputs, &workspaces);
+            if settings
+                .custom_configurations
+                .contains_key(&current_config_identifier)
+            {
+                if !cli::confirm_overwrite(&current_config_identifier.to_string()) {
+                    return;
+                }
+            }
             settings
                 .custom_configurations
-                .contains_key(&CustomConfigIdentfier(custom_config_name.clone()))
-                .then(|| {
-                    if !cli::confirm_overwrite(&custom_config_name.clone()) {
-                        return;
-                    }
-                });
-            settings.custom_configurations.insert(
-                CustomConfigIdentfier(custom_config_name.clone()),
-                Config::from_sway_outputs_workspaces(&outputs, &workspaces),
-            );
+                .insert(current_config_identifier.clone(), current_config);
             settings.save_to_file(&config_file_path);
-            println!("Saved custom configuration named: {}", custom_config_name)
+            println!(
+                "Saved custom configuration named: {}",
+                current_config_identifier
+            );
         }
         Action::Set => {
             let current_config_identifier = DefaultConfigIdentifier::from(&outputs);
@@ -101,7 +105,7 @@ fn main() {
             }
         }
         Action::RunContinuous => {
-            println!("Doesn't work yet");
+            println!("Exiting continuous mode");
         }
         _ => println!("Invalid command. Run with --help for usage information."),
     }

@@ -1,5 +1,5 @@
 use dirs::config_dir;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::{collections::HashMap, fmt::Display, path::PathBuf};
 use swayipc::{Connection, Output as SwayOutput, Workspace as SwayWorkspace};
 
@@ -146,6 +146,10 @@ impl Config {
                 commands.push(output_properties.to_sway_workspace_command(&output.name));
             }
         }
+
+        let cmd_string = commands.clone().join("\n");
+        println!("Running commands:\n{}", cmd_string);
+
         let commands = commands.join(";");
         connection
             .run_command(&commands)
@@ -192,11 +196,17 @@ impl Display for DefaultConfigIdentifier {
 #[derive(Clone, Serialize, Deserialize, Default, Hash, PartialEq, Eq)]
 pub struct CustomConfigIdentfier(pub String);
 
+impl Display for CustomConfigIdentfier {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct Settings {
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub custom_configurations: HashMap<CustomConfigIdentfier, Config>,
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub default_configurations: HashMap<DefaultConfigIdentifier, Config>,
 }
 
