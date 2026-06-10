@@ -9,8 +9,7 @@ struct OutputProperties {
     active: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     resolution: Option<(i32, i32)>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    position: Option<(i32, i32)>,
+    position: (i32, i32),
     #[serde(skip_serializing_if = "Option::is_none")]
     rotation: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -41,9 +40,8 @@ impl OutputProperties {
         } else if let Some((width, height)) = self.resolution {
             command.push_str(&format!(" res {}x{}", width, height));
         }
-        if let Some((x, y)) = self.position {
-            command.push_str(&format!(" pos {} {}", x, y));
-        }
+        let (x, y) = self.position;
+        command.push_str(&format!(" pos {} {}", x, y));
         if let Some(rotation) = &self.rotation {
             command.push_str(&format!(" transform {}", rotation));
         }
@@ -76,11 +74,7 @@ impl From<&SwayOutput> for OutputProperties {
             } else {
                 None
             },
-            position: if output.rect.x > 0 || output.rect.y > 0 {
-                Some((output.rect.x, output.rect.y))
-            } else {
-                None
-            },
+            position: (output.rect.x, output.rect.y),
             rotation: if output.transform.as_ref().is_some_and(|t| t != "normal") {
                 output.transform.clone()
             } else {
