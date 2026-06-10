@@ -33,10 +33,10 @@ impl OutputProperties {
         }
         if self.resolution.is_some() && self.refresh_rate.is_some() {
             command.push_str(&format!(
-                " mode {}x{}@{}Hz",
+                " mode {}x{}@{:.3}Hz",
                 self.resolution.unwrap().0,
                 self.resolution.unwrap().1,
-                self.refresh_rate.unwrap()
+                self.refresh_rate.unwrap() as f64 / 1000.0
             ));
         } else if let Some((width, height)) = self.resolution {
             command.push_str(&format!(" res {}x{}", width, height));
