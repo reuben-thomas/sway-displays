@@ -14,15 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build
+      - name: install rustfmt and clippy
+        run: rustup component add rustfmt clippy
+      - name: build
         run: cargo build --verbose
-
-  style:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: install rustfmt
-        run: |
-          rustup component add rustfmt
       - name: style
         run: rustfmt --check src/main.rs
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
