@@ -42,10 +42,9 @@ fn main() {
             if settings
                 .default_configurations
                 .contains_key(&current_config_identifier)
+                && !cli::confirm_overwrite(&current_config_identifier.to_string())
             {
-                if !cli::confirm_overwrite(&current_config_identifier.to_string()) {
-                    return;
-                }
+                return;
             }
             settings
                 .default_configurations
@@ -66,10 +65,9 @@ fn main() {
             if settings
                 .custom_configurations
                 .contains_key(&current_config_identifier)
+                && !cli::confirm_overwrite(&current_config_identifier.to_string())
             {
-                if !cli::confirm_overwrite(&current_config_identifier.to_string()) {
-                    return;
-                }
+                return;
             }
             settings
                 .custom_configurations

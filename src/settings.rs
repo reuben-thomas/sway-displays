@@ -21,7 +21,7 @@ struct OutputProperties {
 }
 
 impl OutputProperties {
-    fn to_sway_output_command(&self, connection_name: &String) -> String {
+    fn to_sway_output_command(&self, connection_name: &str) -> String {
         let mut command = "output ".to_string() + connection_name;
         if let Some(active) = self.active {
             if active {
@@ -30,12 +30,12 @@ impl OutputProperties {
                 command.push_str(" disable");
             }
         }
-        if self.resolution.is_some() && self.refresh_rate.is_some() {
+        if let (Some(resolution), Some(refresh_rate)) = (self.resolution, self.refresh_rate) {
             command.push_str(&format!(
                 " mode {}x{}@{:.3}Hz",
-                self.resolution.unwrap().0,
-                self.resolution.unwrap().1,
-                self.refresh_rate.unwrap() as f64 / 1000.0
+                resolution.0,
+                resolution.1,
+                refresh_rate as f64 / 1000.0
             ));
         } else if let Some((width, height)) = self.resolution {
             command.push_str(&format!(" res {}x{}", width, height));
@@ -48,10 +48,10 @@ impl OutputProperties {
         if let Some(scale) = self.scale {
             command.push_str(&format!(" scale {:2}", scale));
         }
-        return command;
+        command
     }
 
-    fn to_sway_workspace_command(&self, connection_name: &String) -> String {
+    fn to_sway_workspace_command(&self, connection_name: &str) -> String {
         let mut commands = Vec::<String>::new();
         if let Some(workspaces) = &self.workspaces {
             for workspace in workspaces {
@@ -61,7 +61,7 @@ impl OutputProperties {
                 ));
             }
         }
-        return commands.join(";");
+        commands.join(";")
     }
 }
 
@@ -85,7 +85,7 @@ impl From<&SwayOutput> for OutputProperties {
             } else {
                 None
             },
-            refresh_rate: output.current_mode.and_then(|mode| Some(mode.refresh)),
+            refresh_rate: output.current_mode.map(|mode| mode.refresh),
             workspaces: None,
         }
     }
@@ -110,7 +110,7 @@ impl Config {
     pub fn from_sway_outputs_workspaces(
         outputs: &Vec<SwayOutput>,
         workspaces: &Vec<SwayWorkspace>,
-        builtin_outputs: &Vec<OutputIdentifier>,
+        builtin_outputs: &[OutputIdentifier],
     ) -> Self {
         let mut new_config = Config::default();
         let mut output_workspace_map: HashMap<String, Vec<String>> = HashMap::new();
@@ -127,13 +127,13 @@ impl Config {
                 output_properties.active = None;
             }
             if let Some(workspaces) = output_workspace_map.get(&output.name) {
-                if workspaces.len() > 0 {
+                if !workspaces.is_empty() {
                     output_properties.workspaces = Some(workspaces.clone());
                 }
             }
             new_config.0.insert(output_identifier, output_properties);
         }
-        return new_config;
+        new_config
     }
 
     pub fn set_in_sway(&self, outputs: &Vec<SwayOutput>, connection: &mut Connection) {
@@ -172,10 +172,8 @@ impl<'de> Deserialize<'de> for DefaultConfigIdentifier {
 
 impl From<&Vec<SwayOutput>> for DefaultConfigIdentifier {
     fn from(outputs: &Vec<SwayOutput>) -> Self {
-        let mut identifiers: Vec<OutputIdentifier> = outputs
-            .iter()
-            .map(|output| OutputIdentifier::from(output))
-            .collect();
+        let mut identifiers: Vec<OutputIdentifier> =
+            outputs.iter().map(OutputIdentifier::from).collect();
         identifiers.sort();
         DefaultConfigIdentifier(identifiers)
     }
@@ -214,7 +212,7 @@ impl Settings {
     pub fn load_from_file(config_file_path: &PathBuf) -> Settings {
         let config_file =
             std::fs::read_to_string(config_file_path).expect("Unable to read config file");
-        return serde_yaml::from_str(&config_file).expect("Unable to parse config file");
+        serde_yaml::from_str(&config_file).expect("Unable to parse config file")
     }
 
     pub fn save_to_file(&self, config_file_path: &PathBuf) {
