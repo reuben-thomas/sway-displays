@@ -92,7 +92,7 @@ impl From<&SwayOutput> for OutputProperties {
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct OutputIdentifier(String);
+pub struct OutputIdentifier(String);
 
 impl From<&SwayOutput> for OutputIdentifier {
     fn from(output: &SwayOutput) -> Self {
@@ -110,6 +110,7 @@ impl Config {
     pub fn from_sway_outputs_workspaces(
         outputs: &Vec<SwayOutput>,
         workspaces: &Vec<SwayWorkspace>,
+        builtin_outputs: &Vec<OutputIdentifier>,
     ) -> Self {
         let mut new_config = Config::default();
         let mut output_workspace_map: HashMap<String, Vec<String>> = HashMap::new();
@@ -122,6 +123,9 @@ impl Config {
         for output in outputs {
             let output_identifier = OutputIdentifier::from(output);
             let mut output_properties = OutputProperties::from(output);
+            if builtin_outputs.contains(&output_identifier) {
+                output_properties.active = None;
+            }
             if let Some(workspaces) = output_workspace_map.get(&output.name) {
                 if workspaces.len() > 0 {
                     output_properties.workspaces = Some(workspaces.clone());
@@ -198,6 +202,8 @@ impl Display for CustomConfigIdentfier {
 
 #[derive(Clone, Serialize, Deserialize, Default)]
 pub struct Settings {
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub builtin_outputs: Vec<OutputIdentifier>,
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub custom_configurations: HashMap<CustomConfigIdentfier, Config>,
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]

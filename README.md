@@ -25,6 +25,10 @@ Options:
 ### Configuration
 Unless otherwise specified through the `-c` flag, the default config file should be placed as `~/.config/sway-displays/config.yml` 
 ``` yaml
+builtin_outputs:
+  # Outputs that never have their `active` state saved or set.
+  # This is useful for laptop displays driven by lid switch events.
+  - Sharp Corporation 0x1515 0x00000000
 custom_configurations:
   # Cusom configurations are identified by name
   Home Setup:

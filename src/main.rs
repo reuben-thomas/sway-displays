@@ -34,7 +34,11 @@ fn main() {
         }
         Action::Save => {
             let current_config_identifier = DefaultConfigIdentifier::from(&outputs);
-            let current_config = Config::from_sway_outputs_workspaces(&outputs, &workspaces);
+            let current_config = Config::from_sway_outputs_workspaces(
+                &outputs,
+                &workspaces,
+                &settings.builtin_outputs,
+            );
             if settings
                 .default_configurations
                 .contains_key(&current_config_identifier)
@@ -54,7 +58,11 @@ fn main() {
         }
         Action::SaveCustom(custom_config_name) => {
             let current_config_identifier = CustomConfigIdentfier(custom_config_name);
-            let current_config = Config::from_sway_outputs_workspaces(&outputs, &workspaces);
+            let current_config = Config::from_sway_outputs_workspaces(
+                &outputs,
+                &workspaces,
+                &settings.builtin_outputs,
+            );
             if settings
                 .custom_configurations
                 .contains_key(&current_config_identifier)
