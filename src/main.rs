@@ -84,7 +84,7 @@ fn main() {
                 .default_configurations
                 .get(&current_config_identifier)
             {
-                current_config.set_in_sway(&outputs, &mut connection);
+                current_config.set_in_sway(&outputs, &settings.builtin_outputs, &mut connection);
                 println!(
                     "Setting default configuration for outputs:\n{}",
                     current_config_identifier
@@ -101,7 +101,7 @@ fn main() {
                 .custom_configurations
                 .get(&CustomConfigIdentfier(custom_config_name.clone()))
             {
-                custom_config.set_in_sway(&outputs, &mut connection);
+                custom_config.set_in_sway(&outputs, &settings.builtin_outputs, &mut connection);
                 println!("Setting custom configuration: {}", custom_config_name);
             } else {
                 println!(

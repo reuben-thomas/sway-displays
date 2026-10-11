@@ -136,10 +136,20 @@ impl Config {
         new_config
     }
 
-    pub fn set_in_sway(&self, outputs: &Vec<SwayOutput>, connection: &mut Connection) {
+    pub fn set_in_sway(
+        &self,
+        outputs: &Vec<SwayOutput>,
+        builtin_outputs: &[OutputIdentifier],
+        connection: &mut Connection,
+    ) {
         let mut commands: Vec<String> = Vec::new();
         for output in outputs {
-            if let Some(output_properties) = self.0.get(&OutputIdentifier::from(output)) {
+            let output_identifier = OutputIdentifier::from(output);
+            if let Some(output_properties) = self.0.get(&output_identifier) {
+                let mut output_properties = output_properties.clone();
+                if builtin_outputs.contains(&output_identifier) {
+                    output_properties.active = None;
+                }
                 commands.push(output_properties.to_sway_output_command(&output.name));
                 commands.push(output_properties.to_sway_workspace_command(&output.name));
             }
